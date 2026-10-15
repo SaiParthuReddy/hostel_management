@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Room - Parthu Reddy's Hostel Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 3h12a2 2 0 012 2v2H4V5a2 2 0 012-2zM9 10h2M13 10h2M9 14h2M13 14h2M9 18h2M13 18h2"/></svg>
+                </div>
+                <div class="brand-title">
+                    Parthu Reddy's Hostel
+                    <span class="sub">Room Management System</span>
+                </div>
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html" class="nav-link">Home</a></li>
+                    <li><a href="list.html" class="nav-link">View All Rooms</a></li>
+                    <li><a href="insert.html" class="nav-link">Insert Room</a></li>
+                    <li><a href="search.html" class="nav-link active">Search Room</a></li>
+                    <li><a href="update.html" class="nav-link">Update Room</a></li>
+                    <li><a href="delete.html" class="nav-link">Delete Room</a></li>
+                    <li><a href="available.html" class="nav-link">Available Rooms</a></li>
+                </ul>
+            </nav>
+            <div id="mysql-status-badge" class="mysql-status-badge offline" title="Checking MySQL Status...">
+                <span class="indicator-dot"></span>
+                <span id="mysql-status-text">MySQL: Checking...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-wrapper">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Search Single Hostel Room
+                </h1>
+                <p class="page-subtitle">Look up individual room details by Room Number or Room ID directly from MySQL.</p>
+            </div>
+            <div>
+                <a href="list.html" class="btn btn-outline">
+                    <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    Directory View
+                </a>
+            </div>
+        </div>
+
+        <!-- Search Bar Section -->
+        <div class="card" style="max-width: 680px; margin: 0 auto 2.5rem auto;">
+            <form id="searchRoomForm" onsubmit="executeSearch(event)">
+                <label class="form-label" for="searchQuery">Enter Room Number or Numeric Room ID</label>
+                <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+                    <div style="position: relative; flex: 1;">
+                        <input type="text" id="searchQuery" class="form-control" placeholder="e.g. BH-101, GH-201, PR-301, or 1" required autofocus autocomplete="off">
+                    </div>
+                    <button type="submit" id="searchBtn" class="btn btn-primary" style="padding: 0 1.5rem;">
+                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        Search
+                    </button>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; display: flex; gap: 0.5rem; align-items: center;">
+                    <span>Quick examples:</span>
+                    <button type="button" class="btn btn-outline btn-sm" style="padding: 0.15rem 0.5rem; font-size: 0.75rem;" onclick="quickSearch('BH-101')">BH-101</button>
+                    <button type="button" class="btn btn-outline btn-sm" style="padding: 0.15rem 0.5rem; font-size: 0.75rem;" onclick="quickSearch('GH-101')">GH-101</button>
+                    <button type="button" class="btn btn-outline btn-sm" style="padding: 0.15rem 0.5rem; font-size: 0.75rem;" onclick="quickSearch('PR-301')">PR-301</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Search Results Card -->
+        <div id="searchResultArea" style="max-width: 680px; margin: 0 auto; display: none;">
+            <!-- Dynamically populated -->
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div><strong>Parthu Reddy's Hostel Management System</strong> &bull; Production MySQL Edition</div>
+            <div>Connected Database: <code style="color: #38bdf8;">hostel_db</code> &bull; Port: <code>3000</code></div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        function quickSearch(code) {
+            document.getElementById('searchQuery').value = code;
+            executeSearch();
+        }
+
+        async function executeSearch(e) {
+            if (e) e.preventDefault();
+            const query = document.getElementById('searchQuery').value.trim();
+            if (!query) return;
+
+            const resultArea = document.getElementById('searchResultArea');
+            const searchBtn = document.getElementById('searchBtn');
+
+            searchBtn.disabled = true;
+            resultArea.style.display = 'block';
+            resultArea.innerHTML = `
+                <div class="card" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                    Querying MySQL for '${query}'...
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`/rooms/${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || `No room found matching '${query}'`);
+                }
+
+                resultArea.innerHTML = `
+                    <div class="card" style="border-top: 4px solid var(--blue-600); box-shadow: var(--shadow-lg);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                            <div>
+                                <span class="badge badge-block" style="margin-bottom: 0.5rem;">${data.block_name}</span>
+                                <h2 style="font-size: 2rem; font-weight: 800; color: var(--navy-900);">${data.room_no}</h2>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Database Record ID: #${data.room_id}</div>
+                            </div>
+                            <div>
+                                ${renderStatusBadge(data.status)}
+                            </div>
+                        </div>
+
+                        <div style="background: var(--surface-light); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Bed Capacity</div>
+                                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--navy-900); display: flex; align-items: center; gap: 0.4rem; margin-top: 0.25rem;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></svg>
+                                        ${data.room_capacity} ${data.room_capacity === 1 ? 'Bed' : 'Beds'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Current Status</div>
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: var(--navy-900); margin-top: 0.25rem;">
+                                        ${data.status}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                            <a href="update.html?id=${encodeURIComponent(data.room_no)}" class="btn btn-primary btn-sm">
+                                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                Update This Room
+                            </a>
+                            <a href="delete.html?id=${encodeURIComponent(data.room_no)}" class="btn btn-danger btn-sm">
+                                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
+                                Delete
+                            </a>
+                        </div>
+                    </div>
+                `;
+                showToast(`Found room #${data.room_no}`, 'success');
+            } catch (err) {
+                resultArea.innerHTML = `
+                    <div class="card" style="border-left: 4px solid #ef4444; background: #fff5f5;">
+                        <h3 style="color: #991b1b; font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Room Not Found
+                        </h3>
+                        <p style="color: #7f1d1d; font-size: 0.9rem; margin-bottom: 1rem;">
+                            ${err.message}
+                        </p>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="insert.html" class="btn btn-primary btn-sm">Insert New Room</a>
+                            <a href="list.html" class="btn btn-outline btn-sm">Browse All Rooms</a>
+                        </div>
+                    </div>
+                `;
+                showToast(err.message, 'error');
+            } finally {
+                searchBtn.disabled = false;
+            }
+        }
+
+        // Handle URL search parameter
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const queryParam = params.get('id') || params.get('room_no') || params.get('q');
+            if (queryParam) {
+                document.getElementById('searchQuery').value = queryParam;
+                executeSearch();
+            }
+        });
+    </script>
+</body>
+</html>

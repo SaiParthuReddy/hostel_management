@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parthu Reddy's Hostel Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 3h12a2 2 0 012 2v2H4V5a2 2 0 012-2zM9 10h2M13 10h2M9 14h2M13 14h2M9 18h2M13 18h2"/></svg>
+                </div>
+                <div class="brand-title">
+                    Parthu Reddy's Hostel
+                    <span class="sub">Room Management System</span>
+                </div>
+            </a>
+
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html" class="nav-link active">Home</a></li>
+                    <li><a href="list.html" class="nav-link">View All Rooms</a></li>
+                    <li><a href="insert.html" class="nav-link">Insert Room</a></li>
+                    <li><a href="search.html" class="nav-link">Search Room</a></li>
+                    <li><a href="update.html" class="nav-link">Update Room</a></li>
+                    <li><a href="delete.html" class="nav-link">Delete Room</a></li>
+                    <li><a href="available.html" class="nav-link">Available Rooms</a></li>
+                </ul>
+            </nav>
+
+            <div id="mysql-status-badge" class="mysql-status-badge offline" title="Checking MySQL Status...">
+                <span class="indicator-dot"></span>
+                <span id="mysql-status-text">MySQL: Checking...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-wrapper">
+
+        <!-- Modern Hero Section -->
+        <section class="hero-card">
+            <div class="hero-grid">
+                <div class="hero-content">
+                    <div class="hero-tag">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        Official Campus Residence
+                    </div>
+                    <h1 class="hero-heading">
+                        Smart & Seamless <br>
+                        <span class="highlight">Hostel Room Management</span>
+                    </h1>
+                    <p class="hero-desc">
+                        Manage room allocations across Boys’ Hostel, Girls’ Hostel, Premium Executive Suites, and Shared Blocks with real-time MySQL database synchronisation.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="list.html" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+                            View All Rooms
+                        </a>
+                        <a href="insert.html" class="btn btn-outline" style="border-color: rgba(255,255,255,0.25); color: #ffffff;">
+                            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Add New Room
+                        </a>
+                        <a href="available.html" class="btn btn-secondary" style="background: rgba(37,99,235,0.2); border: 1px solid rgba(56,189,248,0.3); color: #38bdf8;">
+                            <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Vacant Rooms
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-image-wrap">
+                    <img src="images/hostel_hero.jpg" alt="Modern Hostel Residence" onerror="handleImageFallback(this, 'Hostel Campus')">
+                    <div class="hero-image-overlay"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Room Category Blocks -->
+        <div class="section-title">
+            <span>Room Categories & Blocks</span>
+            <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Campus Accommodation Hub</span>
+        </div>
+        <div class="categories-grid">
+            <a href="list.html?block=Boys" class="category-card">
+                <div class="category-icon" style="background:#e0f2fe; color:#0284c7;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="category-name">Boys' Hostel</div>
+                <div class="category-detail">Blocks A & B • Double & Triple Bed Capacity</div>
+            </a>
+
+            <a href="list.html?block=Girls" class="category-card">
+                <div class="category-icon" style="background:#fce7f3; color:#db2777;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="category-name">Girls' Hostel</div>
+                <div class="category-detail">Blocks C & D • 24/7 Security & Attached Baths</div>
+            </a>
+
+            <a href="list.html?block=Premium" class="category-card">
+                <div class="category-icon" style="background:#fef3c7; color:#d97706;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="category-name">Premium Rooms</div>
+                <div class="category-detail">Executive Suites • Single Occupancy with AC</div>
+            </a>
+
+            <a href="list.html?block=Shared" class="category-card">
+                <div class="category-icon" style="background:#ede9fe; color:#7c3aed;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                </div>
+                <div class="category-name">Shared Rooms</div>
+                <div class="category-detail">Economical Standard Dorms • High Capacity</div>
+            </a>
+
+            <a href="available.html" class="category-card">
+                <div class="category-icon" style="background:#ecfdf5; color:#059669;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+                </div>
+                <div class="category-name">Vacant Rooms</div>
+                <div class="category-detail">Ready for Immediate Allocation</div>
+            </a>
+        </div>
+
+        <!-- Room Management Operations Grid -->
+        <div class="section-title">Hostel Operations</div>
+        <div class="operations-grid">
+            
+            <a href="insert.html" class="operation-card">
+                <div>
+                    <div class="op-header">
+                        <div class="op-icon">
+                            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </div>
+                        <div class="op-title">1. Insert Room</div>
+                    </div>
+                    <div class="op-desc">Register new rooms with room number, assigned block, bed capacity, and current availability status.</div>
+                </div>
+                <div class="op-link">
+                    Open Insert Form
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </div>
+            </a>
+
+            <a href="list.html" class="operation-card">
+                <div>
+                    <div class="op-header">
+                        <div class="op-icon">
+                            <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                        </div>
+                        <div class="op-title">2. View All Rooms</div>
+                    </div>
+                    <div class="op-desc">Browse complete directory of all hostel rooms, filter by blocks, monitor capacities, and track real-time occupancy.</div>
+                </div>
+                <div class="op-link">
+                    Open Directory
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </div>
+            </a>
+
+            <a href="search.html" class="operation-card">
+                <div>
+                    <div class="op-header">
+                        <div class="op-icon">
+                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                        <div class="op-title">3. Search Room</div>
+                    </div>
+                    <div class="op-desc">Look up specific rooms instantly by Room Number (e.g. BH-101, GH-201) or numerical Room ID.</div>
+                </div>
+                <div class="op-link">
+                    Search Database
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </div>
+            </a>
+
+            <a href="update.html" class="operation-card">
+                <div>
+                    <div class="op-header">
+                        <div class="op-icon">
+                            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </div>
+                        <div class="op-title">4. Update Room</div>
+                    </div>
+                    <div class="op-desc">Modify existing room capacity, reassign block locations, and update occupancy statuses directly.</div>
+                </div>
+                <div class="op-link">
+                    Update Details
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </div>
+            </a>
+
+            <a href="delete.html" class="operation-card">
+                <div>
+                    <div class="op-header">
+                        <div class="op-icon" style="background:#450a0a; color:#f87171;">
+                            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </div>
+                        <div class="op-title">5. Delete Room</div>
+                    </div>
+                    <div class="op-desc">Securely decommission or remove room records with safety pre-checks and deletion confirmation dialogs.</div>
+                </div>
+                <div class="op-link" style="color: #dc2626;">
+                    Delete Records
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </div>
+            </a>
+
+            <a href="available.html" class="operation-card">
+                <div>
+                    <div class="op-header">
+                        <div class="op-icon" style="background:#064e3b; color:#34d399;">
+                            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </div>
+                        <div class="op-title">6. Available Rooms</div>
+                    </div>
+                    <div class="op-desc">Direct view of all vacant or available beds ready for immediate student check-in and room allocation.</div>
+                </div>
+                <div class="op-link" style="color: #059669;">
+                    View Available Rooms
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </div>
+            </a>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div>
+                <strong>Parthu Reddy's Hostel Management System</strong> &bull; Production MySQL Edition
+            </div>
+            <div>
+                Connected Database: <code style="color: #38bdf8;">hostel_db</code> &bull; Port: <code>3000</code>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

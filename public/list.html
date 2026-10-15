@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Rooms Directory - Parthu Reddy's Hostel Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 3h12a2 2 0 012 2v2H4V5a2 2 0 012-2zM9 10h2M13 10h2M9 14h2M13 14h2M9 18h2M13 18h2"/></svg>
+                </div>
+                <div class="brand-title">
+                    Parthu Reddy's Hostel
+                    <span class="sub">Room Management System</span>
+                </div>
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html" class="nav-link">Home</a></li>
+                    <li><a href="list.html" class="nav-link active">View All Rooms</a></li>
+                    <li><a href="insert.html" class="nav-link">Insert Room</a></li>
+                    <li><a href="search.html" class="nav-link">Search Room</a></li>
+                    <li><a href="update.html" class="nav-link">Update Room</a></li>
+                    <li><a href="delete.html" class="nav-link">Delete Room</a></li>
+                    <li><a href="available.html" class="nav-link">Available Rooms</a></li>
+                </ul>
+            </nav>
+            <div id="mysql-status-badge" class="mysql-status-badge offline" title="Checking MySQL Status...">
+                <span class="indicator-dot"></span>
+                <span id="mysql-status-text">MySQL: Checking...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-wrapper">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    Hostel Rooms Directory
+                </h1>
+                <p class="page-subtitle">Real-time room inventory fetched directly from the MySQL <code>rooms</code> table.</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button class="btn btn-outline btn-sm" onclick="fetchRooms()">
+                    <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    Refresh List
+                </button>
+                <a href="insert.html" class="btn btn-primary btn-sm">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Add Room
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="table-container">
+            <div class="table-toolbar">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                    <span style="font-size: 0.82rem; font-weight: 700; color: var(--navy-900); text-transform: uppercase;">Filter:</span>
+                    <button class="btn btn-outline btn-sm filter-chip active" onclick="setFilter('All', this)">All</button>
+                    <button class="btn btn-outline btn-sm filter-chip" onclick="setFilter('Boys', this)">Boys' Hostel</button>
+                    <button class="btn btn-outline btn-sm filter-chip" onclick="setFilter('Girls', this)">Girls' Hostel</button>
+                    <button class="btn btn-outline btn-sm filter-chip" onclick="setFilter('Premium', this)">Premium</button>
+                    <button class="btn btn-outline btn-sm filter-chip" onclick="setFilter('Shared', this)">Shared</button>
+                    <button class="btn btn-outline btn-sm filter-chip" onclick="setFilter('Available', this)">Available Only</button>
+                </div>
+
+                <div class="table-search-box">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="searchInput" placeholder="Search room, block..." oninput="handleSearch(this.value)">
+                </div>
+            </div>
+
+            <!-- Table Element -->
+            <div style="overflow-x: auto;">
+                <table class="room-table" id="roomsTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 90px;">Room ID</th>
+                            <th>Room No</th>
+                            <th>Block Name</th>
+                            <th>Capacity (Beds)</th>
+                            <th>Status</th>
+                            <th style="text-align: right; width: 170px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="roomsTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                                Loading rooms from MySQL database...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="padding: 1rem 1.5rem; background: var(--surface-light); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-muted);">
+                <span id="roomCountLabel">Showing 0 rooms</span>
+                <span>Database: <code>hostel_db</code> &bull; Table: <code>rooms</code></span>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div><strong>Parthu Reddy's Hostel Management System</strong> &bull; Production MySQL Edition</div>
+            <div>Connected Database: <code style="color: #38bdf8;">hostel_db</code> &bull; Port: <code>3000</code></div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        let allRooms = [];
+        let currentFilter = 'All';
+
+        async function fetchRooms() {
+            const tbody = document.getElementById('roomsTableBody');
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">Fetching room records...</td></tr>`;
+
+            try {
+                const response = await fetch('/rooms');
+                if (!response.ok) throw new Error('Failed to load rooms from database');
+                allRooms = await response.json();
+                renderFilteredRooms();
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2.5rem; color: #ef4444;">Error: ${err.message}. Please check MySQL status.</td></tr>`;
+                showToast(err.message, 'error');
+            }
+        }
+
+        function setFilter(filter, el) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-chip').forEach(btn => btn.classList.remove('active'));
+            if (el) el.classList.add('active');
+            renderFilteredRooms();
+        }
+
+        function handleSearch(term) {
+            renderFilteredRooms(term);
+        }
+
+        function renderFilteredRooms(searchTerm = '') {
+            const tbody = document.getElementById('roomsTableBody');
+            const search = (searchTerm || document.getElementById('searchInput').value).toLowerCase().trim();
+
+            let filtered = allRooms.filter(r => {
+                // Filter chip logic
+                let matchesChip = true;
+                if (currentFilter === 'Boys') matchesChip = r.block_name.toLowerCase().includes('boys');
+                else if (currentFilter === 'Girls') matchesChip = r.block_name.toLowerCase().includes('girls');
+                else if (currentFilter === 'Premium') matchesChip = r.block_name.toLowerCase().includes('premium');
+                else if (currentFilter === 'Shared') matchesChip = r.block_name.toLowerCase().includes('shared');
+                else if (currentFilter === 'Available') matchesChip = r.status.toLowerCase() === 'available' || r.status.toLowerCase() === 'vacant';
+
+                // Search term logic
+                let matchesSearch = true;
+                if (search) {
+                    matchesSearch = r.room_no.toLowerCase().includes(search) ||
+                                    r.block_name.toLowerCase().includes(search) ||
+                                    r.status.toLowerCase().includes(search) ||
+                                    String(r.room_id).includes(search);
+                }
+
+                return matchesChip && matchesSearch;
+            });
+
+            document.getElementById('roomCountLabel').textContent = `Showing ${filtered.length} of ${allRooms.length} rooms`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                            <div style="font-weight: 600; font-size: 1.05rem; margin-bottom: 0.35rem; color: var(--navy-900);">No Matching Rooms Found</div>
+                            <div>Try adjusting your filter or search criteria, or insert a new room.</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(room => `
+                <tr>
+                    <td><strong style="color: var(--navy-900);">#${room.room_id}</strong></td>
+                    <td>
+                        <div style="font-weight: 700; color: var(--blue-600); font-size: 1rem;">${room.room_no}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-block">${room.block_name}</span>
+                    </td>
+                    <td>
+                        <div class="capacity-pill">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></svg>
+                            ${room.room_capacity} ${room.room_capacity === 1 ? 'Bed' : 'Beds'}
+                        </div>
+                    </td>
+                    <td>${renderStatusBadge(room.status)}</td>
+                    <td style="text-align: right;">
+                        <a href="update.html?id=${encodeURIComponent(room.room_no)}" class="btn btn-outline btn-sm" style="padding: 0.35rem 0.65rem;" title="Edit Room">
+                            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            Edit
+                        </a>
+                        <a href="delete.html?id=${encodeURIComponent(room.room_no)}" class="btn btn-danger btn-sm" style="padding: 0.35rem 0.65rem;" title="Delete Room">
+                            <svg viewBox="0 0 24 24" style="width:14px;height:14px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // On page load check URL search params
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const blockParam = params.get('block');
+            if (blockParam) {
+                currentFilter = blockParam;
+                document.querySelectorAll('.filter-chip').forEach(btn => {
+                    if (btn.textContent.includes(blockParam)) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                });
+            }
+            fetchRooms();
+        });
+    </script>
+</body>
+</html>

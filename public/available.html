@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Rooms - Parthu Reddy's Hostel Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 3h12a2 2 0 012 2v2H4V5a2 2 0 012-2zM9 10h2M13 10h2M9 14h2M13 14h2M9 18h2M13 18h2"/></svg>
+                </div>
+                <div class="brand-title">
+                    Parthu Reddy's Hostel
+                    <span class="sub">Room Management System</span>
+                </div>
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html" class="nav-link">Home</a></li>
+                    <li><a href="list.html" class="nav-link">View All Rooms</a></li>
+                    <li><a href="insert.html" class="nav-link">Insert Room</a></li>
+                    <li><a href="search.html" class="nav-link">Search Room</a></li>
+                    <li><a href="update.html" class="nav-link">Update Room</a></li>
+                    <li><a href="delete.html" class="nav-link">Delete Room</a></li>
+                    <li><a href="available.html" class="nav-link active">Available Rooms</a></li>
+                </ul>
+            </nav>
+            <div id="mysql-status-badge" class="mysql-status-badge offline" title="Checking MySQL Status...">
+                <span class="indicator-dot"></span>
+                <span id="mysql-status-text">MySQL: Checking...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-wrapper">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    Available & Vacant Rooms
+                </h1>
+                <p class="page-subtitle">Rooms ready for immediate student assignment across campus blocks.</p>
+            </div>
+            <div>
+                <button class="btn btn-outline btn-sm" onclick="fetchAvailableRooms()">
+                    <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Available Cards Grid -->
+        <div id="availableGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+            <!-- Dynamically populated -->
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div><strong>Parthu Reddy's Hostel Management System</strong> &bull; Production MySQL Edition</div>
+            <div>Connected Database: <code style="color: #38bdf8;">hostel_db</code> &bull; Port: <code>3000</code></div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        async function fetchAvailableRooms() {
+            const grid = document.getElementById('availableGrid');
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">Fetching available rooms from MySQL...</div>`;
+
+            try {
+                const response = await fetch('/rooms/available');
+                if (!response.ok) throw new Error('Failed to load available rooms');
+                const rooms = await response.json();
+
+                if (rooms.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1/-1;" class="card">
+                            <div style="text-align: center; padding: 2rem;">
+                                <h3 style="color: var(--navy-900); margin-bottom: 0.5rem;">No Vacant Rooms Currently Available</h3>
+                                <p style="color: var(--text-secondary); margin-bottom: 1.25rem;">All hostel rooms are marked as Occupied or Under Maintenance.</p>
+                                <a href="insert.html" class="btn btn-primary btn-sm">Insert New Room</a>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = rooms.map(room => `
+                    <div class="card" style="margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid #10b981; box-shadow: var(--shadow-sm); transition: var(--transition);">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                                <span class="badge badge-block">${room.block_name}</span>
+                                <span class="badge badge-available">
+                                    <span style="width:6px;height:6px;border-radius:50%;background:#10b981;"></span>
+                                    Ready
+                                </span>
+                            </div>
+                            <h3 style="font-size: 1.75rem; font-weight: 800; color: var(--navy-900); margin-bottom: 0.25rem;">
+                                ${room.room_no}
+                            </h3>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                                Database ID: #${room.room_id}
+                            </div>
+
+                            <div style="background: var(--surface-light); border-radius: var(--radius-md); padding: 0.85rem 1rem; border: 1px solid var(--border-color); margin-bottom: 1.25rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 0.82rem; color: var(--text-secondary); font-weight: 600;">Available Capacity:</span>
+                                    <span style="font-size: 1.05rem; font-weight: 700; color: var(--navy-900);">
+                                        ${room.room_capacity} ${room.room_capacity === 1 ? 'Bed' : 'Beds'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                            <a href="update.html?id=${encodeURIComponent(room.room_no)}" class="btn btn-outline btn-sm" style="flex: 1;" title="Modify details">
+                                Edit Status
+                            </a>
+                            <button class="btn btn-primary btn-sm" style="background:#059669; border-color:#059669;" onclick="markOccupied(${room.room_id}, '${room.room_no}', '${room.block_name}', ${room.room_capacity})">
+                                Mark Occupied
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #ef4444;">Error: ${err.message}</div>`;
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function markOccupied(roomId, roomNo, blockName, capacity) {
+            try {
+                const response = await fetch(`/rooms/${roomId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        room_no: roomNo,
+                        block_name: blockName,
+                        room_capacity: capacity,
+                        status: 'Occupied'
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to update occupancy status');
+
+                showToast(`Room #${roomNo} marked as Occupied`, 'success');
+                fetchAvailableRooms();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchAvailableRooms);
+    </script>
+</body>
+</html>

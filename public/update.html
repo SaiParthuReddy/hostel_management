@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Room - Parthu Reddy's Hostel Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 3h12a2 2 0 012 2v2H4V5a2 2 0 012-2zM9 10h2M13 10h2M9 14h2M13 14h2M9 18h2M13 18h2"/></svg>
+                </div>
+                <div class="brand-title">
+                    Parthu Reddy's Hostel
+                    <span class="sub">Room Management System</span>
+                </div>
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html" class="nav-link">Home</a></li>
+                    <li><a href="list.html" class="nav-link">View All Rooms</a></li>
+                    <li><a href="insert.html" class="nav-link">Insert Room</a></li>
+                    <li><a href="search.html" class="nav-link">Search Room</a></li>
+                    <li><a href="update.html" class="nav-link active">Update Room</a></li>
+                    <li><a href="delete.html" class="nav-link">Delete Room</a></li>
+                    <li><a href="available.html" class="nav-link">Available Rooms</a></li>
+                </ul>
+            </nav>
+            <div id="mysql-status-badge" class="mysql-status-badge offline" title="Checking MySQL Status...">
+                <span class="indicator-dot"></span>
+                <span id="mysql-status-text">MySQL: Checking...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-wrapper">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Update Hostel Room
+                </h1>
+                <p class="page-subtitle">Fetch an existing room record, adjust capacity or block allocation, and update MySQL.</p>
+            </div>
+            <div>
+                <a href="list.html" class="btn btn-outline">
+                    <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    View Directory
+                </a>
+            </div>
+        </div>
+
+        <div class="page-split-grid">
+            
+            <div class="card">
+                <!-- Step 1: Lookup Form -->
+                <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 1.25rem; margin-bottom: 1.5rem;">
+                    <label class="form-label" for="lookupInput">1. Find Room to Update</label>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.35rem;">
+                        <input type="text" id="lookupInput" class="form-control" placeholder="Enter Room No (e.g. BH-101) or Room ID" required>
+                        <button type="button" class="btn btn-primary" onclick="lookupRoom()">
+                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            Fetch
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Edit Form -->
+                <form id="updateRoomForm" onsubmit="handleUpdate(event)">
+                    <div id="loadedRoomBadge" style="display: none; margin-bottom: 1rem; padding: 0.6rem 0.9rem; background: #e0f2fe; border-radius: var(--radius-sm); font-size: 0.85rem; color: #0369a1; font-weight: 600;">
+                        Editing Room Record: <span id="badgeTarget">--</span>
+                    </div>
+
+                    <input type="hidden" id="target_room_id" name="target_room_id">
+
+                    <div class="form-group">
+                        <label class="form-label" for="update_room_no">
+                            Room Number <span class="required">*</span>
+                        </label>
+                        <input type="text" id="update_room_no" class="form-control" required disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="update_block_name">
+                            Block Name <span class="required">*</span>
+                        </label>
+                        <input type="text" id="update_block_name" class="form-control" required disabled>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label" for="update_capacity">
+                                Room Capacity (Beds) <span class="required">*</span>
+                            </label>
+                            <input type="number" id="update_capacity" class="form-control" min="1" max="10" required disabled>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="update_status">
+                                Occupancy Status <span class="required">*</span>
+                            </label>
+                            <select id="update_status" class="form-control" required disabled>
+                                <option value="Available">Available (Vacant)</option>
+                                <option value="Occupied">Occupied</option>
+                                <option value="Under Maintenance">Under Maintenance</option>
+                                <option value="Reserved">Reserved</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button type="submit" id="saveBtn" class="btn btn-primary" style="flex: 1;" disabled>
+                            <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                            Save Changes to Database
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Side Panel Visual -->
+            <div class="visual-side-panel">
+                <img src="images/room_premium.jpg" alt="Premium Room Interior" onerror="handleImageFallback(this, 'Room Upgrade')">
+                <div class="visual-side-body">
+                    <h3>Maintenance & Status Rules</h3>
+                    <p style="margin-bottom: 0.85rem;">
+                        Updating a room updates warden manifests in real time across the accommodation registry.
+                    </p>
+                    <ul style="font-size: 0.85rem; color: var(--text-secondary); margin-left: 1.25rem; line-height: 1.6;">
+                        <li><strong>Occupied:</strong> Room currently full or assigned.</li>
+                        <li><strong>Under Maintenance:</strong> Excluded from student booking allocations.</li>
+                        <li><strong>Capacity Change:</strong> Affects block totals and availability calculations.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div><strong>Parthu Reddy's Hostel Management System</strong> &bull; Production MySQL Edition</div>
+            <div>Connected Database: <code style="color: #38bdf8;">hostel_db</code> &bull; Port: <code>3000</code></div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        async function lookupRoom(identifier) {
+            const query = identifier || document.getElementById('lookupInput').value.trim();
+            if (!query) {
+                showToast('Please enter a room number or ID to look up', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/rooms/${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Room not found');
+
+                // Populate form
+                document.getElementById('target_room_id').value = data.room_id;
+                document.getElementById('update_room_no').value = data.room_no;
+                document.getElementById('update_block_name').value = data.block_name;
+                document.getElementById('update_capacity').value = data.room_capacity;
+                document.getElementById('update_status').value = data.status;
+
+                // Enable fields
+                document.getElementById('update_room_no').disabled = false;
+                document.getElementById('update_block_name').disabled = false;
+                document.getElementById('update_capacity').disabled = false;
+                document.getElementById('update_status').disabled = false;
+                document.getElementById('saveBtn').disabled = false;
+
+                // Show badge
+                document.getElementById('loadedRoomBadge').style.display = 'block';
+                document.getElementById('badgeTarget').textContent = `#${data.room_no} (ID: ${data.room_id})`;
+
+                showToast(`Loaded details for room #${data.room_no}`, 'success');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function handleUpdate(e) {
+            e.preventDefault();
+            const roomId = document.getElementById('target_room_id').value;
+            if (!roomId) return;
+
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Updating MySQL...';
+
+            const payload = {
+                room_no: document.getElementById('update_room_no').value.trim(),
+                block_name: document.getElementById('update_block_name').value.trim(),
+                room_capacity: parseInt(document.getElementById('update_capacity').value, 10),
+                status: document.getElementById('update_status').value
+            };
+
+            try {
+                const response = await fetch(`/rooms/${roomId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Failed to update room');
+
+                showToast(`Success! Room #${data.room.room_no} updated in database.`, 'success');
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    Save Changes to Database
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const idParam = params.get('id') || params.get('room_no');
+            if (idParam) {
+                document.getElementById('lookupInput').value = idParam;
+                lookupRoom(idParam);
+            }
+        });
+    </script>
+</body>
+</html>

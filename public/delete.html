@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Room - Parthu Reddy's Hostel Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 3h12a2 2 0 012 2v2H4V5a2 2 0 012-2zM9 10h2M13 10h2M9 14h2M13 14h2M9 18h2M13 18h2"/></svg>
+                </div>
+                <div class="brand-title">
+                    Parthu Reddy's Hostel
+                    <span class="sub">Room Management System</span>
+                </div>
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html" class="nav-link">Home</a></li>
+                    <li><a href="list.html" class="nav-link">View All Rooms</a></li>
+                    <li><a href="insert.html" class="nav-link">Insert Room</a></li>
+                    <li><a href="search.html" class="nav-link">Search Room</a></li>
+                    <li><a href="update.html" class="nav-link">Update Room</a></li>
+                    <li><a href="delete.html" class="nav-link active">Delete Room</a></li>
+                    <li><a href="available.html" class="nav-link">Available Rooms</a></li>
+                </ul>
+            </nav>
+            <div id="mysql-status-badge" class="mysql-status-badge offline" title="Checking MySQL Status...">
+                <span class="indicator-dot"></span>
+                <span id="mysql-status-text">MySQL: Checking...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-wrapper">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    Delete Hostel Room
+                </h1>
+                <p class="page-subtitle">Safely search and decommission room records from MySQL with deletion confirmation.</p>
+            </div>
+            <div>
+                <a href="list.html" class="btn btn-outline">
+                    <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    View All Rooms
+                </a>
+            </div>
+        </div>
+
+        <!-- Lookup Box -->
+        <div class="card" style="max-width: 680px; margin: 0 auto 2rem auto;">
+            <label class="form-label" for="deleteQuery">Enter Room Number or Numeric Room ID to Delete</label>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                <input type="text" id="deleteQuery" class="form-control" placeholder="e.g. BH-102, GH-201, or 5" required>
+                <button type="button" class="btn btn-secondary" onclick="fetchRoomToDelete()">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Find Room
+                </button>
+            </div>
+        </div>
+
+        <!-- Preview & Confirm Area -->
+        <div id="deletePreviewArea" style="max-width: 680px; margin: 0 auto; display: none;">
+            <!-- Dynamically populated -->
+        </div>
+
+    </main>
+
+    <!-- Modal Dialog for Delete Confirmation -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 class="modal-title" style="color: #991b1b; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Confirm Room Decommission
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.95rem; line-height: 1.5;">
+                Are you sure you want to permanently delete room <strong id="modalRoomNo" style="color: var(--navy-900);">--</strong> from the MySQL database? This action will remove all associated allocation data.
+            </p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeDeleteModal()">Cancel</button>
+                <button type="button" id="confirmDeleteBtn" class="btn btn-danger btn-sm" onclick="executeDelete()">
+                    Yes, Permanently Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div><strong>Parthu Reddy's Hostel Management System</strong> &bull; Production MySQL Edition</div>
+            <div>Connected Database: <code style="color: #38bdf8;">hostel_db</code> &bull; Port: <code>3000</code></div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        let targetedRoom = null;
+
+        async function fetchRoomToDelete(identifier) {
+            const query = identifier || document.getElementById('deleteQuery').value.trim();
+            if (!query) {
+                showToast('Please enter a room number or ID to find', 'error');
+                return;
+            }
+
+            const previewArea = document.getElementById('deletePreviewArea');
+            previewArea.style.display = 'block';
+            previewArea.innerHTML = `<div class="card" style="text-align: center; color: var(--text-muted);">Finding room in MySQL...</div>`;
+
+            try {
+                const response = await fetch(`/rooms/${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Room not found');
+
+                targetedRoom = data;
+
+                previewArea.innerHTML = `
+                    <div class="card" style="border: 2px solid #fecaca; background: #fffafb; box-shadow: var(--shadow-lg);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem;">
+                            <div>
+                                <span class="badge badge-block">${data.block_name}</span>
+                                <h2 style="font-size: 2rem; font-weight: 800; color: #991b1b; margin-top: 0.25rem;">${data.room_no}</h2>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Database Record ID: #${data.room_id}</div>
+                            </div>
+                            <div>
+                                ${renderStatusBadge(data.status)}
+                            </div>
+                        </div>
+
+                        <div style="background: #ffffff; border: 1px solid #fee2e2; border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-around;">
+                            <div>
+                                <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Capacity</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: var(--navy-900);">${data.room_capacity} Beds</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Current Status</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: var(--navy-900);">${data.status}</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                            <button type="button" class="btn btn-outline btn-sm" onclick="clearPreview()">Cancel</button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="openDeleteModal()">
+                                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
+                                Delete Room #${data.room_no}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                previewArea.innerHTML = `
+                    <div class="card" style="border-left: 4px solid #ef4444; background: #fff5f5;">
+                        <h4 style="color: #991b1b; margin-bottom: 0.25rem;">Room Not Found</h4>
+                        <p style="color: #7f1d1d; font-size: 0.9rem;">${err.message}</p>
+                    </div>
+                `;
+                showToast(err.message, 'error');
+            }
+        }
+
+        function openDeleteModal() {
+            if (!targetedRoom) return;
+            document.getElementById('modalRoomNo').textContent = `#${targetedRoom.room_no} (ID: ${targetedRoom.room_id})`;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+
+        function clearPreview() {
+            targetedRoom = null;
+            document.getElementById('deletePreviewArea').style.display = 'none';
+            document.getElementById('deleteQuery').value = '';
+        }
+
+        async function executeDelete() {
+            if (!targetedRoom) return;
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Deleting...';
+
+            try {
+                const response = await fetch(`/rooms/${targetedRoom.room_id}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Failed to delete room');
+
+                closeDeleteModal();
+                showToast(`Deleted Room #${targetedRoom.room_no} from MySQL`, 'success');
+
+                const previewArea = document.getElementById('deletePreviewArea');
+                previewArea.innerHTML = `
+                    <div class="card" style="border-left: 4px solid #10b981; background: #f0fdf4;">
+                        <h4 style="color: #065f46; font-size: 1.1rem; margin-bottom: 0.35rem;">Room Deleted Successfully</h4>
+                        <p style="color: #047857; font-size: 0.9rem; margin-bottom: 1rem;">
+                            Room #${targetedRoom.room_no} (Record ID: ${targetedRoom.room_id}) was successfully removed from MySQL database <code>hostel_db</code>.
+                        </p>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <a href="list.html" class="btn btn-primary btn-sm">View Updated Directory</a>
+                            <button class="btn btn-outline btn-sm" onclick="clearPreview()">Delete Another Room</button>
+                        </div>
+                    </div>
+                `;
+                targetedRoom = null;
+                checkMySQLStatus();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Yes, Permanently Delete';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const idParam = params.get('id') || params.get('room_no');
+            if (idParam) {
+                document.getElementById('deleteQuery').value = idParam;
+                fetchRoomToDelete(idParam);
+            }
+        });
+    </script>
+</body>
+</html>
